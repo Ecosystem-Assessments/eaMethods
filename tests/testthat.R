@@ -1,4 +1,4 @@
 library(testthat)
 library(eaMethods)
 
-test_check("eaMethods")
+# test_check("eaMethods")
