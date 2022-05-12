@@ -4,23 +4,44 @@
 #'
 #' @param fishData fishing data as sf object
 #' @param areaGrid regular grid as sf object
-#' @param metric type(s) of fishing intensity metric to evaluate: 1: Fishing effort density, no normalization; 2: Fishing effort density; 3: Fishing biomass yield density; 4: Fishing relative biomass yield density
-
+#' @param metric type of fishing intensity metric to evaluate, one of: 1: Fishing effort density, no normalization; 2: Fishing effort density; 3: Fishing biomass yield density; 4: Fishing relative biomass yield density
+#' @param id_field name of column containing the unique identifier of the cells in the regular grid
+#' @param biomass_field name of column containing biomass data, if applicable
+#' 
 #' @keywords fishing intensity
+#'
+#' @returns This function returns a data.frame with a column containing the unique identifier of the grid cell and a column containing the assessment of fishing intensity.
 #'
 #' @export
 #'
-#' @details This function uses fisheries data to evaluate the intensity of fishing over a regular grid
-#'
-
-  fishing_intensity <- function(fishData, areaGrid, metric = 1) {
+#' @examples
+#' grd <- sf::st_make_grid(cellsize = 1, offset = c(0,0), n = c(10,10)) |>
+#'        sf::st_sf() |>
+#'        dplyr::mutate(uid = 1:100)
+#' fish <- data.frame(lon = runif(50, 0, 10), lat = runif(50,0,10)) |>
+#'         sf::st_as_sf(coords = c("lon","lat")) |>
+#'         sf::st_buffer(dist = 0.5) |>
+#'         dplyr::mutate(biomass = runif(50, 0, 10000))
+#' 
+#' int1 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 1)
+#' int2 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 2)
+#' int3 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 3)
+#' int4 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 4)
+#' 
+#' grd <- dplyr::left_join(grd, int1, by = "uid")
+#' grd <- dplyr::left_join(grd, int2, by = "uid")
+#' grd <- dplyr::left_join(grd, int3, by = "uid")
+#' grd <- dplyr::left_join(grd, int4, by = "uid")
+#' 
+#' plot(grd)
+fishing_intensity <- function(fishData, areaGrid, metric = 1, id_field = "uid", biomass_field = "biomass") {
   # ~~~~~       INITIAL MEASUREMENTS        ~~~~~ #
   
   # Calculate total area of all points transformed in polygons and bind to polygons
   fishData$AreaTotKM2 <- as.numeric(sf::st_area(fishData) / 1000000)
 
   # Calculate total biomass and bind to polygons
-  fishData$BiomassTotKg <- sum(fishData$catch)
+  if (metric %in% c(3,4)) fishData$BiomassTotKg <- sum(fishData[,biomass_field,drop=TRUE])
 
   # Intersect points as polygons to study grid as polygons
   fishData <- suppressWarnings(sf::st_intersection(areaGrid, fishData))
@@ -32,60 +53,53 @@
   fishData$PropAreaTot <- fishData$AreaKM2 / fishData$AreaTotKM2
 
   # Calculate relative biomass as a proportion of fishing area and bind to polygons data frame
-  fishData$PropBiomassKg <- fishData$catch * fishData$PropAreaTot
-
+  if (metric %in% c(3,4)) {
+    fishData$PropBiomassKg <- fishData[,biomass_field,drop=TRUE] * fishData$PropAreaTot
+  }
+  
   # Calculate biomass as a proportion of fishing area and bind to polygons data frame
-  fishData$RelPropBiomassKg <- fishData$PropBiomassKg / fishData$BiomassTotKg
-
+  if (metric %in% c(3,4)) {
+    fishData$RelPropBiomassKg <- fishData$PropBiomassKg / fishData$BiomassTotKg
+  }
 
                 # ~~~~~       FISHING METRICS        ~~~~~ #
+  PropAreaTot <- PropBiomassKg <- RelPropBiomassKg <- Var1 <- NULL # For R CMD CHECK
 
-  if (1 %in% metric) {
+  if (1 == metric) {
     # Metric 1: Fishing effort density, no normalization
-    areaGrid <- fishData$ID %>%
-                table() %>%
-                as.data.frame(stringsAsFactors = F) %>%
-                dplyr::rename(ID = 1, FishEffortDens = 2) %>%
-                dplyr::mutate(ID = as.integer(ID)) %>%
-                dplyr::left_join(areaGrid, ., by = 'ID') %>%
-                dplyr::mutate(FishEffortDens = ifelse(is.na(FishEffortDens), 0, FishEffortDens))
+    dat <- fishData[,id_field, drop = TRUE] |>
+           table() |>
+           as.data.frame() |>
+           mutate(Var1 = as.numeric(as.character(Var1)))
+    colnames(dat) <- c(id_field, "FishEffortDens")
   }
 
-  if (2 %in% metric) {
+  if (2 == metric) {
     # Metric 2: Fishing effort density
-    areaGrid <- fishData %>%
-                sf::st_set_geometry(NULL) %>%
-                dplyr::group_by(ID) %>%
-                dplyr::summarize(FishEffortDensProp = sum(PropAreaTot)) %>%
-                dplyr::rename(ID = 1, FishEffortDensProp = 2) %>%
-                dplyr::left_join(areaGrid, ., by = 'ID') %>%
-                dplyr::mutate(FishEffortDensProp = ifelse(is.na(FishEffortDensProp), 0, FishEffortDensProp))
+    dat <- fishData |>
+           sf::st_set_geometry(NULL) |>
+           dplyr::group_by(!!as.name(id_field)) |>
+           dplyr::summarize(FishEffortDensProp = sum(PropAreaTot)) |>
+           data.frame()
   }
 
-  if (3 %in% metric) {
+  if (3 == metric) {
     # Metric 3: Fishing biomass yield density
-    areaGrid <- fishData %>%
-                sf::st_set_geometry(NULL) %>%
-                dplyr::group_by(ID) %>%
-                dplyr::summarize(FishBiomassKg = sum(PropBiomassKg)) %>%
-                dplyr::rename(ID = 1, PropBiomassKg = 2) %>%
-                dplyr::left_join(areaGrid, ., by = 'ID') %>%
-                dplyr::mutate(PropBiomassKg = ifelse(is.na(PropBiomassKg), 0, PropBiomassKg))
+    dat <- fishData |>
+           sf::st_set_geometry(NULL) |>
+           dplyr::group_by(!!as.name(id_field)) |>
+           dplyr::summarize(FishBiomassKg = sum(PropBiomassKg)) |>
+           data.frame()
   }
 
-  if (4 %in% metric) {
+  if (4 == metric) {
     # Metric 4: Fishing relative biomass yield density
-    egslGrid <- fishData %>%
-                sf::st_set_geometry(NULL) %>%
-                dplyr::group_by(ID) %>%
-                dplyr::summarize(RelFishBiomassKg = sum(RelPropBiomassKg)) %>%
-                dplyr::rename(ID = 1, RelPropBiomassKg = 2) %>%
-                dplyr::left_join(areaGrid, ., by = 'ID') %>%
-                dplyr::mutate(RelPropBiomassKg = ifelse(is.na(RelPropBiomassKg), 0, RelPropBiomassKg))
+    dat <- fishData |>
+           sf::st_set_geometry(NULL) |>
+           dplyr::group_by(!!as.name(id_field)) |>
+           dplyr::summarize(RelFishBiomassKg = sum(RelPropBiomassKg)) |>
+           data.frame()           
   }
 
-  # Remove geometry column
-  areaGrid <- sf::st_geometry(areaGrid, NULL)
-
-  return(areaGrid)
+  return(dat)
 }

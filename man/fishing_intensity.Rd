@@ -4,20 +4,51 @@
 \alias{fishing_intensity}
 \title{Function to evaluate fishing intensity}
 \usage{
-fishing_intensity(fishData, areaGrid, metric = 1)
+fishing_intensity(
+  fishData,
+  areaGrid,
+  metric = 1,
+  id_field = "uid",
+  biomass_field = "biomass"
+)
 }
 \arguments{
 \item{fishData}{fishing data as sf object}
 
 \item{areaGrid}{regular grid as sf object}
 
-\item{metric}{type(s) of fishing intensity metric to evaluate: 1: Fishing effort density, no normalization; 2: Fishing effort density; 3: Fishing biomass yield density; 4: Fishing relative biomass yield density}
+\item{metric}{type of fishing intensity metric to evaluate, one of: 1: Fishing effort density, no normalization; 2: Fishing effort density; 3: Fishing biomass yield density; 4: Fishing relative biomass yield density}
+
+\item{id_field}{name of column containing the unique identifier of the cells in the regular grid}
+
+\item{biomass_field}{name of column containing biomass data, if applicable}
+}
+\value{
+This function returns a data.frame with a column containing the unique identifier of the grid cell and a column containing the assessment of fishing intensity.
 }
 \description{
 The function evaluates fishing intensity over a regular grid
 }
-\details{
-This function uses fisheries data to evaluate the intensity of fishing over a regular grid
+\examples{
+grd <- sf::st_make_grid(cellsize = 1, offset = c(0,0), n = c(10,10)) |>
+       sf::st_sf() |>
+       dplyr::mutate(uid = 1:100)
+fish <- data.frame(lon = runif(50, 0, 10), lat = runif(50,0,10)) |>
+        sf::st_as_sf(coords = c("lon","lat")) |>
+        sf::st_buffer(dist = 0.5) |>
+        dplyr::mutate(biomass = runif(50, 0, 10000))
+
+int1 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 1)
+int2 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 2)
+int3 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 3)
+int4 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 4)
+
+grd <- dplyr::left_join(grd, int1, by = "uid")
+grd <- dplyr::left_join(grd, int2, by = "uid")
+grd <- dplyr::left_join(grd, int3, by = "uid")
+grd <- dplyr::left_join(grd, int4, by = "uid")
+
+plot(grd)
 }
 \keyword{fishing}
 \keyword{intensity}
