@@ -31,13 +31,8 @@
 #' )
 #' field <- "species"
 #'
-#' # Clean
 #' review_taxa(df, field, "clean")
-#'
-#' # Clean & Remove
 #' review_taxa(df, field, c("clean", "remove"))
-#'
-#' # Clean & Combine
 #' review_taxa(df, field, c("clean", "combine"))
 #'
 #' @export
@@ -87,16 +82,24 @@ clean_taxa <- function(df, field) {
 #' @export
 remove_taxa <- function(df, field) {
   rm <- taxa_remove$remove
-  uid <- df[, field] %in% rm
+  nm <- as.data.frame(df) |>
+    dplyr::select(dplyr::any_of(field))
+  nm <- nm[, 1]
+  uid <- nm %in% rm
   df[!uid, ]
 }
 
 #' @name review_taxa
 #' @export
 combine_taxa <- function(df, field) {
+  nm <- as.data.frame(df) |>
+    dplyr::select(dplyr::any_of(field))
+  nm <- nm[, 1]
+
   for (i in 1:nrow(taxa_combine)) {
-    uid <- df[, field] %in% taxa_combine$from[i]
-    df[uid, field] <- taxa_combine$to[i]
+    uid <- nm %in% taxa_combine$from[i]
+    nm[uid] <- taxa_combine$to[i]
   }
+  df[, field] <- nm
   df
 }

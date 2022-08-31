@@ -46,13 +46,8 @@ df <- data.frame(
 )
 field <- "species"
 
-# Clean
 review_taxa(df, field, "clean")
-
-# Clean & Remove
 review_taxa(df, field, c("clean", "remove"))
-
-# Clean & Combine
 review_taxa(df, field, c("clean", "combine"))
 
 }
