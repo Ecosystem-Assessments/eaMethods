@@ -6,5 +6,7 @@ taxa_combine <- read.csv("./inst/extdata/combine.csv")
 usethis::use_data(
   taxa_clean, 
   taxa_remove, 
-  taxa_combine
+  taxa_combine,
+  overwrite = TRUE,
+  internal = TRUE
 )

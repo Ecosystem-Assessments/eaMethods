@@ -22,36 +22,40 @@
 #'
 #' @examples
 #' df <- data.frame(
-#'   species = c("Boltenia", "Boltenia sp.", "Triglops spp.", "Triglops murrayi", "Amphipoda"),
+#'   species = c(
+#'     "Boltenia", "Boltenia sp. (UNID)",
+#'     "Triglops spp.", "Triglops murrayi",
+#'     "Amphipoda"
+#'   ),
 #'   frequency = c(61, 100, 27, 50, 2)
 #' )
 #' field <- "species"
 #'
 #' # Clean
-#' df <- clean_taxa(df, field)
-#' df
+#' review_taxa(df, field, "clean")
 #'
-#' # Remove
-#' df <- remove_taxa(df, field)
-#' df
+#' # Clean & Remove
+#' review_taxa(df, field, c("clean", "remove"))
 #'
-#' # Combine
-#' df <- combine_taxa(df, field)
-#' df
+#' # Clean & Combine
+#' review_taxa(df, field, c("clean", "combine"))
 #'
 #' @export
 review_taxa <- function(df, field, review = c("clean", "remove", "combine")) {
   # Clean up species names
-  if ("clean" %in% review) df[, field] <- clean_taxa(df[, field])
+  if ("clean" %in% review) df <- clean_taxa(df, field)
   if ("remove" %in% review) df <- remove_taxa(df, field)
-  if ("combine" %in% review) df[, field] <- combine_taxa(df[, field])
+  if ("combine" %in% review) df <- combine_taxa(df, field)
+  df
 }
 
 #' @name review_taxa
 #' @export
 clean_taxa <- function(df, field) {
   rm <- taxa_clean$remove
-  nm <- df[, field]
+  nm <- as.data.frame(df) |>
+        dplyr::select(dplyr::any_of(field))
+  nm <- nm[,1]
 
   # Trim spaces, then add them again
   rm <- trim_then_add(rm)

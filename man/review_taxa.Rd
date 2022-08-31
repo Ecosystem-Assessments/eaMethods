@@ -37,22 +37,21 @@ be useful.
 }
 \examples{
 df <- data.frame(
-  species = c("Boltenia","Boltenia sp.","Triglops spp.","Triglops murrayi","Amphipoda"),
+  species = c("Boltenia", "Boltenia sp. (UNID)", 
+              "Triglops spp.", "Triglops murrayi", 
+              "Amphipoda"),
   frequency = c(61, 100, 27, 50, 2)
 )
 field <- "species"
 
-# Clean 
-df <- clean_taxa(df, field)
-df 
+# Clean
+review_taxa(df, field, "clean")
 
-# Remove 
-df <- remove_taxa(df, field)
-df
+# Clean & Remove
+review_taxa(df, field, c("clean","remove"))
 
-# Combine 
-df <- combine_taxa(df, field)
-df
+# Clean & Combine
+review_taxa(df, field, c("clean","combine"))
 
 }
 \keyword{species}
