@@ -23,7 +23,7 @@
 #' @examples
 #' df <- data.frame(
 #'   species = c(
-#'     "Boltenia", "Boltenia sp. (UNID)",
+#'     "Boltenia c.,large", "Boltenia sp. (UNID)",
 #'     "Triglops spp.", "Triglops murrayi",
 #'     "Amphipoda"
 #'   ),
