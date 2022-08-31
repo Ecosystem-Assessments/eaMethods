@@ -54,8 +54,8 @@ review_taxa <- function(df, field, review = c("clean", "remove", "combine")) {
 clean_taxa <- function(df, field) {
   rm <- taxa_clean$remove
   nm <- as.data.frame(df) |>
-        dplyr::select(dplyr::any_of(field))
-  nm <- nm[,1]
+    dplyr::select(dplyr::any_of(field))
+  nm <- nm[, 1]
 
   # Trim spaces, then add them again
   rm <- trim_then_add(rm)
