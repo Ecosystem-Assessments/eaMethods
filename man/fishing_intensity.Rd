@@ -30,13 +30,13 @@ This function returns a data.frame with a column containing the unique identifie
 The function evaluates fishing intensity over a regular grid
 }
 \examples{
-grd <- sf::st_make_grid(cellsize = 1, offset = c(0,0), n = c(10,10)) |>
-       sf::st_sf() |>
-       dplyr::mutate(uid = 1:100)
-fish <- data.frame(lon = runif(50, 0, 10), lat = runif(50,0,10)) |>
-        sf::st_as_sf(coords = c("lon","lat")) |>
-        sf::st_buffer(dist = 0.5) |>
-        dplyr::mutate(biomass = runif(50, 0, 10000))
+grd <- sf::st_make_grid(cellsize = 1, offset = c(0, 0), n = c(10, 10)) |>
+  sf::st_sf() |>
+  dplyr::mutate(uid = 1:100)
+fish <- data.frame(lon = runif(50, 0, 10), lat = runif(50, 0, 10)) |>
+  sf::st_as_sf(coords = c("lon", "lat")) |>
+  sf::st_buffer(dist = 0.5) |>
+  dplyr::mutate(biomass = runif(50, 0, 10000))
 
 int1 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 1)
 int2 <- fishing_intensity(fishData = fish, areaGrid = grd, metric = 2)
