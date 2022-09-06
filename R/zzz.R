@@ -3,6 +3,7 @@
 #' @docType package
 #' @name eaMethods
 #'
+#' @importFrom taxize classification
 #' @importFrom utils read.csv write.csv read.table
 #' @importFrom worrms wm_name2id_
 NULL

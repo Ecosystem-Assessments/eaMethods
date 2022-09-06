@@ -22,6 +22,7 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown,
+    taxize,
     testthat (>= 3.0.0),
     usethis,
     worrms

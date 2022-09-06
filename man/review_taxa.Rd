@@ -6,6 +6,7 @@
 \alias{remove_taxa}
 \alias{combine_taxa}
 \alias{get_aphia}
+\alias{get_classification}
 \title{Function to clean, combine and remove taxa names}
 \usage{
 review_taxa(df, field, review = c("clean", "remove", "combine"))
@@ -17,13 +18,15 @@ remove_taxa(df, field)
 combine_taxa(df, field)
 
 get_aphia(df, field)
+
+get_classification(df)
 }
 \arguments{
 \item{df}{data.frame containing the list of species to be cleaned}
 
 \item{field}{name of the field containing the list of scientific species names}
 
-\item{review}{what type(s) of review to perform between c("clean","remove","combine","aphia"). "clean" removes a certain number of text usually accompanying species names, such as "sp." and "spp.". "combine" modifies the names of species to combine certain species based on a list of species that should be combined (view code), "remove" removes all species that are contained in a list of species that should be removed, and "aphia" gets aphiaID of species using the \code{worrms} package.}
+\item{review}{what type(s) of review to perform between c("clean", "remove", "combine", "aphia", "classification"). "clean" removes a certain number of text usually accompanying species names, such as "sp." and "spp.". "combine" modifies the names of species to combine certain species based on a list of species that should be combined (view code), "remove" removes all species that are contained in a list of species that should be removed, "aphia" gets aphiaID of species using the \code{worrms} package, and "classification" uses the aphia ID and the \code{taxize} package to get taxonomic classification of species.}
 }
 \value{
 This function returns the provided data.frame with the names of the species reviewd,
@@ -53,7 +56,9 @@ review_taxa(df, field, "clean")
 review_taxa(df, field, c("clean", "remove"))
 review_taxa(df, field, c("clean", "combine"))
 review_taxa(df, field, c("clean", "aphia"))
-review_taxa(df, field, c("clean", "remove", "combine", "aphia"))
+(df <- review_taxa(df, field, c("clean", "remove", "combine", "aphia")))
+df <- unique(df[, c("species", "aphiaID")])
+review_taxa(df, field, c("clean", "remove", "combine", "aphia", "classification"))
 
 }
 \keyword{species}
