@@ -6,7 +6,7 @@
 #'
 #' @param df data.frame containing the list of species to be cleaned
 #' @param field name of the field containing the list of scientific species names
-#' @param review what type(s) of review to perform between c("clean","remove","combine"). "clean" removes a certain number of text usually accompanying species names, such as "sp." and "spp.". "combine" modifies the names of species to combine certain species based on a list of species that should be combined (view code), and "remove" removes all species that are contained in a list of species that should be removed.
+#' @param review what type(s) of review to perform between c("clean","remove","combine","aphia"). "clean" removes a certain number of text usually accompanying species names, such as "sp." and "spp.". "combine" modifies the names of species to combine certain species based on a list of species that should be combined (view code), "remove" removes all species that are contained in a list of species that should be removed, and "aphia" gets aphiaID of species using the `worrms` package.
 #'
 #' @keywords taxonomy
 #' @keywords species
@@ -34,6 +34,8 @@
 #' review_taxa(df, field, "clean")
 #' review_taxa(df, field, c("clean", "remove"))
 #' review_taxa(df, field, c("clean", "combine"))
+#' review_taxa(df, field, c("clean", "aphia"))
+#' review_taxa(df, field, c("clean", "remove", "combine", "aphia"))
 #'
 #' @export
 review_taxa <- function(df, field, review = c("clean", "remove", "combine")) {
@@ -41,6 +43,7 @@ review_taxa <- function(df, field, review = c("clean", "remove", "combine")) {
   if ("clean" %in% review) df <- clean_taxa(df, field)
   if ("remove" %in% review) df <- remove_taxa(df, field)
   if ("combine" %in% review) df <- combine_taxa(df, field)
+  if ("aphia" %in% review) df <- get_aphia(df, field)
   df
 }
 
@@ -101,5 +104,30 @@ combine_taxa <- function(df, field) {
     nm[uid] <- taxa_combine$to[i]
   }
   df[, field] <- nm
+  df
+}
+
+#' @name review_taxa
+#' @export
+get_aphia <- function(df, field) {
+  nm <- as.data.frame(df) |>
+    dplyr::select(dplyr::any_of(field))
+  nm <- nm[, 1]
+
+  # Get species AphiaID
+  uid <- worrms::wm_name2id_(name = nm)
+  df <- dplyr::mutate(df, aphiaID = unlist(uid)) |>
+    dplyr::mutate(aphiaID = ifelse(aphiaID == -999, NA, aphiaID))
+
+  # Verify missing ones and replace with known Aphia in aphia.csv
+  idna <- is.na(df$aphiaID)
+  verif <- df[idna, ] |>
+    dplyr::select(-aphiaID) |>
+    dplyr::left_join(taxa_aphia, by = setNames("Species", field))
+
+  # Put back together
+  df$aphiaID[idna] <- verif$aphiaID
+
+  # return
   df
 }

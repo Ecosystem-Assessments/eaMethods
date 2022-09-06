@@ -4,6 +4,7 @@
 #' @name eaMethods
 #'
 #' @importFrom utils read.csv write.csv read.table
+#' @importFrom worrms wm_name2id_
 NULL
 
 
