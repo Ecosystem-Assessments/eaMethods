@@ -116,8 +116,9 @@ get_aphia <- function(df, field) {
 
   # Get species AphiaID
   uid <- worrms::wm_name2id_(name = nm)
-  df <- dplyr::mutate(df, aphiaID = unlist(uid)) |>
-    dplyr::mutate(aphiaID = ifelse(aphiaID == -999, NA, aphiaID))
+  dat <- data.frame(species = names(uid), aphiaID = unlist(uid))
+  df <- dplyr::left_join(df, dat, by = setNames("species", field)) |>
+        dplyr::mutate(aphiaID = ifelse(aphiaID == -999, NA, aphiaID))
 
   # Verify missing ones and replace with known Aphia in aphia.csv
   idna <- is.na(df$aphiaID)
