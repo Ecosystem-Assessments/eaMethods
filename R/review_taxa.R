@@ -179,6 +179,9 @@ get_classification <- function(df) {
 
 
   # -----
+  df$aphiaID <- as.numercic(df$aphiaID)
+  x$aphiaID <- as.numeric(x$aphiaID)
+  if (any(is.na(df$aphiaID))) rlang::abort("Aphia ID must all be valid. Check list.")
   df <- dplyr::left_join(df, x, by = "aphiaID")
 
   # -----

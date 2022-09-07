@@ -17,3 +17,11 @@ trim_then_add <- function(string) {
   string <- glue::glue(" {string} ")
   string
 }
+
+# ------------------------------------------------------------------------------
+# Messages
+msgInfo <- function(..., appendLF = TRUE) {
+  txt <- paste(cli::symbol$info, ...)
+  message(crayon::green(txt), appendLF = appendLF)
+  invisible(txt)
+}
