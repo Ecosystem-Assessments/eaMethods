@@ -18,11 +18,11 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
     dplyr,
+    taxize,
     sf
 Suggests: 
     knitr,
     rmarkdown,
-    taxize,
     testthat (>= 3.0.0),
     usethis,
     worrms
